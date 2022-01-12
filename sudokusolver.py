@@ -7,6 +7,7 @@ class SudokuSolver(object):
         self.backup = []
 
     def print_sudoku(self):
+        # Can be upgraded to fancy printing
         print(self.sudoku)
 
     def gen_index(self):
@@ -15,6 +16,10 @@ class SudokuSolver(object):
                 yield (i, j)
 
     def gen_square_index(self, square):
+        # Squares are number fromm 0 to 8
+        # 0 1 2
+        # 3 4 5
+        # 6 7 8
         row = square // 3
         col = square % 3
         row_start = row * 3
@@ -54,20 +59,19 @@ class SudokuSolver(object):
 
     def check_consistency(self, verbose=False):
         consistent = True
-        for i in range(9):
-            for j in range(9):
-                ele = self.sudoku[i, j]
-                if ele != 0:
-                    y_start = (i // 3) * 3
-                    y_end = y_start + 3
-                    x_start = (j // 3) * 3
-                    x_end = x_start + 3
-                    if len(np.where(self.sudoku[i, :] == ele)[0]) > 1 \
-                        or len(np.where(self.sudoku[:, j] == ele)[0]) > 1 \
-                        or len(np.where(self.sudoku[y_start:y_end, x_start:x_end] == ele)[0]) > 1:
-                        consistent = False
-                        if verbose:
-                            print("Found inconsistency at index {}, {}".format(i, j))
+        for i, j in self.gen_index():
+            ele = self.sudoku[i, j]
+            if ele != 0:
+                y_start = (i // 3) * 3
+                y_end = y_start + 3
+                x_start = (j // 3) * 3
+                x_end = x_start + 3
+                if len(np.where(self.sudoku[i, :] == ele)[0]) > 1 \
+                    or len(np.where(self.sudoku[:, j] == ele)[0]) > 1 \
+                    or len(np.where(self.sudoku[y_start:y_end, x_start:x_end] == ele)[0]) > 1:
+                    consistent = False
+                    if verbose:
+                        print("Found inconsistency at index {}, {}".format(i, j))
         if verbose and consistent:
             print("Sudoku is consistent")
         return consistent
@@ -162,7 +166,7 @@ class SudokuSolver(object):
                 if len(self.candidate_ele[(i, j)]) == 2:
                     guess_x = i
                     guess_y = j
-                    print(self.candidate_ele[(i, j)])
+                    print("Guessing between {} at {}, {}".format(self.candidate_ele[(i, j)], i, j))
                     for ele in self.candidate_ele[(i, j)]:
                         self.print_sudoku()
                         self.backup.append(copy.deepcopy(self.sudoku))
@@ -170,10 +174,13 @@ class SudokuSolver(object):
                         self.update_candidate(guess_x, guess_y, ele)
                         self.fill_numbers()
                         if not self.is_solved():
+                            # If not solved, reset to previous status
                             self.sudoku = self.backup.pop()
                             self.build_candidates()
                         else:
+                            # If solved stop the process
                             break
+                # If solved break the outer loop
                 if self.is_solved():
                     break
 
